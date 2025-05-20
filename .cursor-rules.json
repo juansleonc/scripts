@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "scope": "user",
+      "rule": "Siempre responde en español. Nunca escribas código en spanglish: el código debe estar completamente en inglés."
+    },
+    {
+      "scope": "user",
+      "rule": "Prefiero soluciones limpias, seguras y bien estructuradas. No sugerir hacks o soluciones rápidas sin justificación técnica clara."
+    },
+    {
+      "scope": "project",
+      "rule": "Si se detecta lógica compleja o repetida en controllers o models, sugiere moverla a un Service Object o Query Object."
+    },
+    {
+      "scope": "project",
+      "rule": "Todo nuevo código debe tener pruebas unitarias. Si se detecta código sin pruebas, sugiere agregarlas usando RSpec."
+    },
+    {
+      "scope": "project",
+      "rule": "Cuando se usen consultas SQL, sugiere verificar si hay índice en las columnas filtradas, y recomienda agregarlo si no existe."
+    },
+    {
+      "scope": "project",
+      "rule": "Si se usan Redis o Sidekiq, sugiere TTLs razonables y patrones de datos apropiados como counters, sets o pub/sub."
+    },
+    {
+      "scope": "project",
+      "rule": "Si se usa ActiveRecord, evitar SQL crudo salvo justificación clara. Promover el uso de métodos seguros como `where`, `joins`, `includes`, etc."
+    },
+    {
+      "scope": "project",
+      "rule": "Sugiere separar specs lentas o de integración en carpetas como `spec/system` y mantener specs de lógica pura en `spec/models`, `spec/services`."
+    }
+  ]
+}
