@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# para correr necesita permisos chmod +x bin/test
+
+# Colores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Funciones auxiliares
+check_docker() {
+    if ! docker info > /dev/null 2>&1; then
+        echo -e "${RED}Error: Docker no está corriendo${NC}"
+        exit 1
+    fi
+}
+
+start_services() {
+    echo -e "${YELLOW}Iniciando todos los servicios necesarios...${NC}"
+    docker compose up -d
+}
+
+wait_for_web_container() {
+    echo -e "${YELLOW}Esperando a que el contenedor web esté listo...${NC}"
+    until docker compose exec web curl -s http://localhost:3000 > /dev/null 2>&1; do
+        echo -e "${YELLOW}Esperando...${NC}"
+        sleep 2
+    done
+}
+
+build_rspec_command() {
+    local cmd="RAILS_ENV=test bundle exec rspec"
+    
+    if [ "$PARALLEL" = true ]; then
+        cmd="$cmd --parallel"
+    fi
+    
+    if [ "$FAIL_FAST" = true ]; then
+        cmd="$cmd --fail-fast"
+    fi
+    
+    echo "$cmd"
+}
+
+# Función de ayuda
+show_help() {
+    echo "Uso: ./bin/test [opciones] [archivos de prueba]"
+    echo ""
+    echo "Opciones:"
+    echo "  -h, --help     Muestra esta ayuda"
+    echo "  -p, --parallel Ejecuta las pruebas en paralelo"
+    echo "  -f, --fail-fast Detiene la ejecución al primer fallo"
+    echo ""
+    echo "Ejemplos:"
+    echo "  ./bin/test                    # Ejecuta todas las pruebas"
+    echo "  ./bin/test spec/models/       # Ejecuta pruebas de modelos"
+    echo "  ./bin/test -p                 # Ejecuta pruebas en paralelo"
+}
+
+# Variables globales
+PARALLEL=false
+FAIL_FAST=false
+RSPEC_ARGS=""
+
+# Procesar argumentos
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -p|--parallel)
+            PARALLEL=true
+            shift
+            ;;
+        -f|--fail-fast)
+            FAIL_FAST=true
+            shift
+            ;;
+        *)
+            RSPEC_ARGS="$RSPEC_ARGS $1"
+            shift
+            ;;
+    esac
+done
+
+# Flujo principal
+check_docker
+start_services
+wait_for_web_container
+
+# Ejecutar pruebas
+echo -e "${GREEN}Ejecutando pruebas...${NC}"
+RSPEC_CMD=$(build_rspec_command)
+docker compose exec web bash -c "$RSPEC_CMD $RSPEC_ARGS"
